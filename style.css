@@ -18,6 +18,7 @@
     width: min-content;
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .tag{
