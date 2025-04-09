@@ -23,9 +23,6 @@ const cool_data_structure = [{tags:[winter_clothes_tag], value:'insert epic wint
 
 function create_tag(name, tags=[]) {
     name = String(name)
-    if (!Array.isArray(tags)) {
-        throw new Error("tags is not array");
-    }
 
     const root = document.createElement('div')
     root.className = 'tag'
@@ -35,28 +32,33 @@ function create_tag(name, tags=[]) {
     tag_name.textContent = name
     root.appendChild(tag_name)
     
-    const tag_container = create_tag_container()
-    for (const tag of tags) {
-        tag_container.appendChild(tag)
-    }
+    const tag_container = create_tag_container(tags)
     root.appendChild(tag_container)
 
-    return {root, tag_name, tag_container}
+
+    return root
 }
 
 
 
 
-function create_tag_container() {
+function create_tag_container(tags=[]) {
+    if (!Array.isArray(tags)) {
+        console.log('tags',tags)
+        throw new Error("tags is not array", tags);
+    }
     const tag_container = document.createElement('div')
     tag_container.className = 'tag-container'
+    for (const tag of tags) {
+        tag_container.appendChild(tag)
+    }
     return tag_container
 }
 
 
 
 
-function create_item_container(name) {
+function create_item_container(name, tags=[]) {
     const root = document.createElement('div')
     root.className = 'item-container'
 
@@ -65,16 +67,15 @@ function create_item_container(name) {
     item_name.textContent = name
     root.appendChild(item_name)
 
-    const tag_container = create_tag_container(root)
+    const tag_container = create_tag_container(tags)
     root.appendChild(tag_container)
 
-    return {root, item_name, tag_container}
+    return root
 }
 
 
 
 
-const item = create_item_container('foo faa foo faa')
-item.tag_container.appendChild(create_tag('tag',[create_tag('tag tag').root]).root)
-document.body.appendChild(item.root)
+
+
 
