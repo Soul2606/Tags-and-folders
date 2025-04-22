@@ -34,3 +34,13 @@
     text-align: center;
     color: white;
 }
+
+.tags_list{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.selection-panel{
+    position: absolute;
+    background-color: gray;
+}

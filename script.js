@@ -1,12 +1,28 @@
 
 
 
+const tags_list = document.getElementById('tags-list')
+const add_tag_button = document.getElementById('add-tag-button')
 
+
+
+
+const all_tags = []
 class Tag {
-    constructor(tag_name, descending_tags, child_tags) {
+    constructor(tag_name='new tag', descending_tags=[], child_tags=[]) {
         this.name = tag_name
         this.descending_tags = descending_tags
         this.child_tags = child_tags
+        all_tags.push(this)
+    }
+
+    remove(){
+        const index = all_tags.indexOf(this)
+        if (index === -1) {
+            console.warn(`Cannot remove ${this.name}`)
+            return
+        }
+        all_tags.splice(index,1)
     }
 }
 
@@ -76,6 +92,72 @@ function create_item_container(name, tags=[]) {
 
 
 
+function create_selection_panel_button(panel_elements, text_content) {
+    const root = document.createElement('button')
+    root.className = 'selection-button'
+    root.textContent = text_content
+    root.addEventListener('click',()=>{
+        const selection_panel = document.createElement('div')
+        selection_panel.className = 'selection-panel'
+        //Setting the panel position doesn't work, it has position absolute
+        const rect = root.getBoundingClientRect()
+        console.log(rect.top, rect.left)
+        selection_panel.style.top = `${rect.top}px`
+        selection_panel.style.left = `${rect.left}px`
+        if (panel_elements.length === 0) {
+            selection_panel.innerHTML += '<p>Nothing here</p>'
+        }
+        for (const element of panel_elements) {
+            if (!(element instanceof HTMLElement)) {
+                throw new Error("panel_elements contains non instance of HTMLElement");
+            }
+            selection_panel.appendChild(element)
+        }
+        document.body.appendChild(selection_panel)
+
+        selection_panel.addEventListener('mouseleave',()=>{
+            selection_panel.remove()
+        })
+    })
+    return root
+}
+
+
+
+
+function create_editable_tag(tag_object) {
+    if (!(tag_object instanceof Tag)) {
+        throw new Error("tag_object is not instance of Tag");
+    }
+    const name = String(tag_object.name)
+
+    const root = document.createElement('div')
+    root.className = 'editable-tag'
+
+    const tag_name = document.createElement('input')
+    tag_name.type = 'text'
+    tag_name.className = 'editable-tag-name'
+    tag_name.value = name
+    root.appendChild(tag_name)
+
+    const add_child_tag_button = create_selection_panel_button([], 'Add child tag')
+    root.appendChild(add_child_tag_button)
+    
+    const tag_container = create_tag_container(tag_object.child_tags)
+    root.appendChild(tag_container)
+
+
+    return root
+}
+
+
+
+
+add_tag_button.addEventListener('click',()=>{
+    const new_tag = new Tag();
+    console.log(new_tag)
+    tags_list.appendChild(create_editable_tag(new_tag))
+})
 
 
 
