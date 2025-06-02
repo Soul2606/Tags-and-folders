@@ -37,8 +37,10 @@ const cool_data_structure = [{tags:[winter_clothes_tag], value:'insert epic wint
 
 
 
-function create_tag(name, tags=[]) {
-	name = String(name)
+function create_tag(tag) {
+	if (!(tag instanceof Tag)) {console.error(tag);throw new Error("tag is not a Tag");}	
+	const name = String(tag.name)
+	const tags = tag.child_tags
 
 	const root = document.createElement('div')
 	root.className = 'tag'
@@ -50,7 +52,6 @@ function create_tag(name, tags=[]) {
 	
 	const tag_container = create_tag_container(tags)
 	root.appendChild(tag_container)
-
 
 	return root
 }
@@ -104,7 +105,7 @@ function create_selection_panel_button(get_panel_elements, text_content) {
 		console.log(rect.top, rect.left)
 		selection_panel.style.top = `${rect.top}px`
 		selection_panel.style.left = `${rect.left}px`
-		const panel_elements = typeof get_panel_elements === 'function'? get_panel_elements(): get_panel_elements
+		const panel_elements = typeof get_panel_elements === 'function'? get_panel_elements(selection_panel): get_panel_elements
 		if (!Array.isArray(panel_elements)) throw new Error("panel_elements is not an array");
 		if (panel_elements.length === 0) {
 			selection_panel.innerHTML += '<p>Nothing here</p>'
@@ -148,19 +149,32 @@ function create_editable_tag(tag_object, all_tags) {
 	})
 	root.appendChild(tag_name)
 
-	const add_child_tag_button = create_selection_panel_button(()=>{
+	const add_child_tag_button = create_selection_panel_button(selection_panel=>{
 		return all_tags.map(tag=>{
-			const tag_element = document.createElement('p')
+			const tag_element = document.createElement('button')
 			tag_element.textContent = tag.name
+			tag_element.addEventListener('click',()=>{
+				tag_object.child_tags.push(tag)
+				console.log(tag_object, tag)
+				selection_panel.remove()
+			})
 			return tag_element
 		})
 	}, 'Add child tag')
 	root.appendChild(add_child_tag_button)
 	
-	const tag_container = create_tag_container(tag_object.child_tags)
+	const tag_container = create_tag_container(tag_object.child_tags.map(create_tag))
 	root.appendChild(tag_container)
 
 	return root
+}
+
+
+
+
+for (const tag of all_tags) {
+	if (!(tag instanceof Tag)) throw new Error("tag is not tag");
+	tags_list.appendChild(create_editable_tag(tag, all_tags))
 }
 
 
