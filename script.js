@@ -16,6 +16,17 @@ class Tag {
 		all_tags.push(this)
 	}
 
+	get_inherited_tags(checked = new Set()){
+		const inherited_tags = new Set()
+		for (const tag of this.child_tags) {
+			if (checked.has(tag)) continue
+			checked.add(tag)
+			inherited_tags.add(tag)
+			tag.get_inherited_tags(checked).forEach(inherited_tag=>inherited_tags.add(inherited_tag))
+		}
+		return inherited_tags
+	}
+
 	remove(){
 		const index = all_tags.indexOf(this)
 		if (index === -1) {
@@ -50,7 +61,7 @@ function create_tag(tag) {
 	tag_name.textContent = name
 	root.appendChild(tag_name)
 	
-	const tag_container = create_tag_container(tags)
+	const tag_container = create_tag_container(tags.map(create_tag))
 	root.appendChild(tag_container)
 
 	return root
@@ -129,12 +140,11 @@ function create_selection_panel_button(get_panel_elements, text_content) {
 
 
 
-function create_editable_tag(tag_object, all_tags) {
+function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 	if (!(tag_object instanceof Tag))throw new Error("tag_object is not instance of Tag");
 	if (!Array.isArray(all_tags)) throw new Error("all_tags is not an Array");
 	if (all_tags.some(e=>!(e instanceof Tag))) throw new Error("all_tags contains non tags");
-
-	const name = String(tag_object.name)
+	if (typeof tag_changed_callback !== 'function') throw new Error("tag_changed_callback is not a function");
 
 	const root = document.createElement('div')
 	root.className = 'editable-tag'
@@ -142,39 +152,64 @@ function create_editable_tag(tag_object, all_tags) {
 	const tag_name = document.createElement('input')
 	tag_name.type = 'text'
 	tag_name.className = 'editable-tag-name'
-	tag_name.value = name
+	tag_name.value = String(tag_object.name)
 	tag_name.addEventListener('input',()=>{
 		tag_object.name = tag_name.value
 		console.log(tag_object)
+		tag_changed_callback(tag_object, root)
 	})
 	root.appendChild(tag_name)
-
+	
 	const add_child_tag_button = create_selection_panel_button(selection_panel=>{
-		return all_tags.map(tag=>{
+		return all_tags.filter(tag=>tag!==tag_object).map(tag=>{
 			const tag_element = document.createElement('button')
 			tag_element.textContent = tag.name
 			tag_element.addEventListener('click',()=>{
 				tag_object.child_tags.push(tag)
 				console.log(tag_object, tag)
 				selection_panel.remove()
+				tag_changed_callback(tag_object, root)
 			})
 			return tag_element
 		})
 	}, 'Add child tag')
 	root.appendChild(add_child_tag_button)
-	
-	const tag_container = create_tag_container(tag_object.child_tags.map(create_tag))
-	root.appendChild(tag_container)
 
-	return root
+	let previous_tag_container
+	const update_function = ()=>{
+		const inherited_tags = Array.from(tag_object.get_inherited_tags())
+		tag_name.value = String(tag_object.name)
+		
+		const tag_container = create_tag_container(inherited_tags.map(create_tag))
+		if (previous_tag_container) {
+			root.replaceChild(tag_container, previous_tag_container)
+		}else{
+			root.appendChild(tag_container)
+		}
+		previous_tag_container = tag_container
+
+		return root
+	}
+
+	update_function()
+
+	return {element:root, update_function}
 }
 
 
 
 
+let all_update_functions = []
+const call_all_update_functions = tag=>{
+	console.log(all_update_functions, tag)
+	all_update_functions = all_update_functions.filter(e=>document.body.contains(e.element))
+	all_update_functions.filter(e=>Array.from(e.tag.get_inherited_tags()).includes(tag)).forEach(e=>e.update_function())
+}
 for (const tag of all_tags) {
 	if (!(tag instanceof Tag)) throw new Error("tag is not tag");
-	tags_list.appendChild(create_editable_tag(tag, all_tags))
+	const {element, update_function} = create_editable_tag(tag, all_tags, call_all_update_functions)
+	tags_list.appendChild(element)
+	all_update_functions.push({element, update_function, tag})
 }
 
 
@@ -183,7 +218,9 @@ for (const tag of all_tags) {
 add_tag_button.addEventListener('click',()=>{
 	const new_tag = new Tag();
 	console.log(new_tag)
-	tags_list.appendChild(create_editable_tag(new_tag, all_tags))
+	const {element, update_function} = create_editable_tag(new_tag, all_tags, call_all_update_functions)
+	tags_list.appendChild(element)
+	all_update_functions.push({element, update_function, tag:new_tag})
 })
 
 
