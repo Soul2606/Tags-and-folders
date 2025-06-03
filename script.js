@@ -68,6 +68,16 @@ function create_tag_element(name='-', child_tag_elements=[]) {
 
 
 
+function create_inherited_tag(name='-') {
+	const root = document.createElement('div')
+	root.className = 'inherited-tag tag'
+	root.textContent = name
+	return root
+}
+
+
+
+
 function create_minor_tag(name='-') {
 	const root = document.createElement('div')
 	root.className = 'minor-tag'
@@ -184,10 +194,13 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 
 	let previous_tag_container
 	const update_function = ()=>{
-		const inherited_tags = Array.from(tag_object.get_inherited_tags())
 		tag_name.value = String(tag_object.name)
-		
-		const tag_container = create_tag_container(inherited_tags.map(tag=>create_tag_element(tag.name,tag.child_tags.map(tag=>create_tag_element(tag.name)))))
+
+		const only_inherited_tags = tag_object.get_inherited_tags().difference(new Set(tag_object.child_tags))
+		const inherited_tag_elements = Array.from(only_inherited_tags).map(tag=>create_inherited_tag(tag.name))
+		const child_tag_elements = tag_object.child_tags.map(tag=>create_tag_element(tag.name,tag.child_tags.map(tag=>create_minor_tag(tag.name))))
+		const tag_container = create_tag_container(child_tag_elements.concat(inherited_tag_elements))
+
 		if (previous_tag_container) {
 			root.replaceChild(tag_container, previous_tag_container)
 		}else{
