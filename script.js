@@ -40,18 +40,16 @@ class Tag {
 
 
 
+const item_tag = new Tag('item');
 const winter_tag = new Tag('winter')
-const clothes_tag = new Tag('clothes');
+const clothes_tag = new Tag('clothes',[],[item_tag]);
 const winter_clothes_tag = new Tag('winter-clothes',[],[winter_tag, clothes_tag])
 const cool_data_structure = [{tags:[winter_clothes_tag], value:'insert epic winter clothes'}]
 
 
 
 
-function create_tag(tag) {
-	if (!(tag instanceof Tag)) {console.error(tag);throw new Error("tag is not a Tag");}	
-	const name = String(tag.name)
-	const tags = tag.child_tags
+function create_tag_element(name='-', child_tag_elements=[]) {
 
 	const root = document.createElement('div')
 	root.className = 'tag'
@@ -61,9 +59,19 @@ function create_tag(tag) {
 	tag_name.textContent = name
 	root.appendChild(tag_name)
 	
-	const tag_container = create_tag_container(tags.map(create_tag))
+	const tag_container = create_tag_container(child_tag_elements)
 	root.appendChild(tag_container)
 
+	return root
+}
+
+
+
+
+function create_minor_tag(name='-') {
+	const root = document.createElement('div')
+	root.className = 'minor-tag'
+	root.textContent = name
 	return root
 }
 
@@ -105,15 +113,14 @@ function create_item_container(name, tags=[]) {
 
 
 function create_selection_panel_button(get_panel_elements, text_content) {
+	//Pure function
 	const root = document.createElement('button')
 	root.className = 'selection-button'
 	root.textContent = text_content
 	root.addEventListener('click',()=>{
 		const selection_panel = document.createElement('div')
 		selection_panel.className = 'selection-panel'
-		//Setting the panel position doesn't work, it has position absolute
 		const rect = root.getBoundingClientRect()
-		console.log(rect.top, rect.left)
 		selection_panel.style.top = `${rect.top}px`
 		selection_panel.style.left = `${rect.left}px`
 		const panel_elements = typeof get_panel_elements === 'function'? get_panel_elements(selection_panel): get_panel_elements
@@ -161,7 +168,7 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 	root.appendChild(tag_name)
 	
 	const add_child_tag_button = create_selection_panel_button(selection_panel=>{
-		return all_tags.filter(tag=>tag!==tag_object).map(tag=>{
+		return all_tags.filter(tag=>tag!==tag_object&&(!tag_object.child_tags.includes(tag))).map(tag=>{
 			const tag_element = document.createElement('button')
 			tag_element.textContent = tag.name
 			tag_element.addEventListener('click',()=>{
@@ -180,7 +187,7 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 		const inherited_tags = Array.from(tag_object.get_inherited_tags())
 		tag_name.value = String(tag_object.name)
 		
-		const tag_container = create_tag_container(inherited_tags.map(create_tag))
+		const tag_container = create_tag_container(inherited_tags.map(tag=>create_tag_element(tag.name,tag.child_tags.map(tag=>create_tag_element(tag.name)))))
 		if (previous_tag_container) {
 			root.replaceChild(tag_container, previous_tag_container)
 		}else{

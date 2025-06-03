@@ -1,46 +1,58 @@
 
 .item-container{
-    width: fit-content;
-    border-radius: 5px;
-    border: solid black 1px;
-    background-color: rgb(202, 207, 213);
-    margin: 5px 0;
+	width: fit-content;
+	border-radius: 5px;
+	border: solid black 1px;
+	background-color: rgb(202, 207, 213);
+	margin: 5px 0;
 }
 
 .item-name{
-    text-wrap: nowrap;
-    margin: 2px;
-    border-bottom: solid black 3px;
+	text-wrap: nowrap;
+	margin: 2px;
+	border-bottom: solid black 3px;
 }
 
 .tag-container{
-    min-width: 100%;
-    width: min-content;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
+	min-width: 100%;
+	width: min-content;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
 }
 
 .tag{
-    margin: 2px;
-    padding: 2px 6px;
-    background-color: black;
-    border: solid white 2px;
-    border-radius: 12px 12px 12px 12px;
+	margin: 2px;
+	padding: 2px 6px;
+	background-color: black;
+	border: solid white 2px;
+	border-radius: 12px 12px 12px 12px;
 }
 
 .tag-name{
-    text-wrap: nowrap;
-    text-align: center;
-    color: white;
+	text-wrap: nowrap;
+	text-align: center;
+	color: white;
+	font-size: x-large;
 }
 
-.tags_list{
-    display: flex;
-    flex-wrap: wrap;
+.minor-tag{
+	margin: 2px;
+	padding: 2px 6px;
+	background-color: rgb(121, 60, 60);
+	border: solid white 1px;
+	border-radius: 6px 6px 6px 6px;
+	text-wrap: nowrap;
+	text-align: center;
+	color: white;
+}
+
+.tags-list{
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .selection-panel{
-    position: absolute;
-    background-color: gray;
+	position: absolute;
+	background-color: gray;
 }
