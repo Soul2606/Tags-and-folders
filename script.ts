@@ -1,28 +1,32 @@
 
 
 
-const tags_list = document.getElementById('tags-list')
-const add_tag_button = document.getElementById('add-tag-button')
+const tags_list = document.getElementById('tags-list')!
+const add_tag_button = document.getElementById('add-tag-button')!
 
 
 
 
-const all_tags = []
+const all_tags:Tag[] = []
 class Tag {
-	constructor(tag_name='new tag', descending_tags=[], child_tags=[]) {
-		this.name = tag_name
-		this.descending_tags = descending_tags
-		this.child_tags = child_tags
+	name:string
+	descendingTags:Tag[]
+	childTags:Tag[]
+
+	constructor(name = 'new tag', descendingTags:Tag[] = [], childTags:Tag[] = []) {
+		this.name = name
+		this.descendingTags = descendingTags
+		this.childTags = childTags
 		all_tags.push(this)
 	}
 
-	get_inherited_tags(checked = new Set()){
-		const inherited_tags = new Set()
-		for (const tag of this.child_tags) {
+	getInheritedTags(checked = new Set<Tag>()){
+		const inherited_tags = new Set<Tag>()
+		for (const tag of this.childTags) {
 			if (checked.has(tag)) continue
 			checked.add(tag)
 			inherited_tags.add(tag)
-			tag.get_inherited_tags(checked).forEach(inherited_tag=>inherited_tags.add(inherited_tag))
+			tag.getInheritedTags(checked).forEach(tag=>inherited_tags.add(tag))
 		}
 		return inherited_tags
 	}
@@ -49,7 +53,7 @@ const cool_data_structure = [{tags:[winter_clothes_tag], value:'insert epic wint
 
 
 
-function create_tag_element(name='-', child_tag_elements=[]) {
+function create_tag_element(name='-', child_tag_elements:HTMLElement[] = []) {
 
 	const root = document.createElement('div')
 	root.className = 'tag'
@@ -88,7 +92,7 @@ function create_minor_tag(name='-') {
 
 
 
-function create_tag_container(tags=[]) {
+function create_tag_container(tags:HTMLElement[] = []) {
 	if (!Array.isArray(tags)) {
 		console.log('tags',tags)
 		throw new Error("tags is not array", tags);
@@ -104,7 +108,7 @@ function create_tag_container(tags=[]) {
 
 
 
-function create_item_container(name, tags=[]) {
+function create_item_container(name:string, tags=[]) {
 	const root = document.createElement('div')
 	root.className = 'item-container'
 
@@ -122,7 +126,7 @@ function create_item_container(name, tags=[]) {
 
 
 
-function create_selection_panel_button(get_panel_elements, text_content) {
+function create_selection_panel_button(get_panel_elements:HTMLElement[]|((v:HTMLElement)=>HTMLElement[]), text_content:string) {
 	//Pure function
 	const root = document.createElement('button')
 	root.className = 'selection-button'
@@ -157,7 +161,7 @@ function create_selection_panel_button(get_panel_elements, text_content) {
 
 
 
-function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
+function create_editable_tag(tag_object:Tag, all_tags:readonly Tag[], tag_changed_callback:(tag:Tag, el:HTMLElement)=>void) {
 	if (!(tag_object instanceof Tag))throw new Error("tag_object is not instance of Tag");
 	if (!Array.isArray(all_tags)) throw new Error("all_tags is not an Array");
 	if (all_tags.some(e=>!(e instanceof Tag))) throw new Error("all_tags contains non tags");
@@ -178,11 +182,11 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 	root.appendChild(tag_name)
 	
 	const add_child_tag_button = create_selection_panel_button(selection_panel=>{
-		return all_tags.filter(tag=>tag!==tag_object&&(!tag_object.child_tags.includes(tag))).map(tag=>{
+		return all_tags.filter(tag=>tag!==tag_object&&(!tag_object.childTags.includes(tag))).map(tag=>{
 			const tag_element = document.createElement('button')
 			tag_element.textContent = tag.name
 			tag_element.addEventListener('click',()=>{
-				tag_object.child_tags.push(tag)
+				tag_object.childTags.push(tag)
 				console.log(tag_object, tag)
 				selection_panel.remove()
 				tag_changed_callback(tag_object, root)
@@ -192,13 +196,13 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 	}, 'Add child tag')
 	root.appendChild(add_child_tag_button)
 
-	let previous_tag_container
+	let previous_tag_container:HTMLElement
 	const update_function = ()=>{
 		tag_name.value = String(tag_object.name)
 
-		const only_inherited_tags = tag_object.get_inherited_tags().difference(new Set(tag_object.child_tags))
+		const only_inherited_tags = tag_object.getInheritedTags().difference(new Set(tag_object.childTags))
 		const inherited_tag_elements = Array.from(only_inherited_tags).map(tag=>create_inherited_tag(tag.name))
-		const child_tag_elements = tag_object.child_tags.map(tag=>create_tag_element(tag.name,tag.child_tags.map(tag=>create_minor_tag(tag.name))))
+		const child_tag_elements = tag_object.childTags.map(tag=>create_tag_element(tag.name, tag.childTags.map(tag=>create_minor_tag(tag.name))))
 		const tag_container = create_tag_container(child_tag_elements.concat(inherited_tag_elements))
 
 		if (previous_tag_container) {
@@ -219,11 +223,11 @@ function create_editable_tag(tag_object, all_tags, tag_changed_callback) {
 
 
 
-let all_update_functions = []
-const call_all_update_functions = tag=>{
+let all_update_functions:{element:HTMLElement, update_function:()=>void, tag:Tag}[] = []
+const call_all_update_functions = (tag:Tag) => {
 	console.log(all_update_functions, tag)
 	all_update_functions = all_update_functions.filter(e=>document.body.contains(e.element))
-	all_update_functions.filter(e=>Array.from(e.tag.get_inherited_tags()).includes(tag)).forEach(e=>e.update_function())
+	all_update_functions.filter(e=>Array.from(e.tag.getInheritedTags()).includes(tag)).forEach(e=>e.update_function())
 }
 for (const tag of all_tags) {
 	if (!(tag instanceof Tag)) throw new Error("tag is not tag");
